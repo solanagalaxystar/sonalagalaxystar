@@ -2931,6 +2931,13 @@ function copyRPCOutput(){
 // ══════════════════════════════════════════════════════
 function init(){
   simulateLoad();initStars();initCanvas();
+  // ── Mobile zoom: fit all planets on screen ──
+  const isMobile = window.innerWidth < 768;
+  const isSmall  = window.innerWidth < 480;
+  if (isSmall)       { zoom = 0.32; targetZoom = 0.32; }
+  else if (isMobile) { zoom = 0.42; targetZoom = 0.42; }
+  // Center camera so sun is visible
+  camX = 0; camY = 0;
   canvas.addEventListener('mousemove',onMove);
   canvas.addEventListener('mousedown',onDown);
   canvas.addEventListener('mouseup',onUp);
@@ -2938,6 +2945,13 @@ function init(){
   canvas.addEventListener('touchstart',onTS,{passive:false});
   canvas.addEventListener('touchmove',onTM,{passive:false});
   canvas.addEventListener('touchend',onTE);
+  // Re-apply zoom on resize
+  window.addEventListener('resize', ()=>{
+    const m = window.innerWidth < 768;
+    const s = window.innerWidth < 480;
+    if (s)      { zoom = 0.32; targetZoom = 0.32; }
+    else if (m) { zoom = 0.42; targetZoom = 0.42; }
+  });
   buildHUD();
   draw();
   // Data intervals
@@ -4331,66 +4345,78 @@ const CW_CHAINS = [
 ];
 
 const CW_BRIDGES = [
-  { from:'ethereum', to:'solana',   protocol:'Wormhole',    vol:'$142M', txs:'18,420', dir:'bi',
+  { from:'ethereum', to:'solana', protocol:'Wormhole',
+    vol:'$12.7M', txs:'4,820', dir:'bi',
     tokens:'ETH, USDC, USDT, wBTC', fee:'0.001 ETH',
-    desc:'Maior protocolo de bridge Solana↔ETH. Gerencia 70%+ do vol cross-chain Solana.' },
-  { from:'bnb',      to:'solana',   protocol:'deBridge',    vol:'$89M',  txs:'12,340', dir:'bi',
-    tokens:'BNB, USDT, USDC',       fee:'0.1%',
-    desc:'Bridge nativa BNB↔Solana. Cresceu 340% em 2025. Segundo maior por volume.' },
-  { from:'base',     to:'solana',   protocol:'Wormhole',    vol:'$67M',  txs:'9,280',  dir:'in',
-    tokens:'USDC, ETH, cbBTC',      fee:'0.001 ETH',
-    desc:'Capital fluindo de Base para Solana. USDC via Circle CCTP é o mais rápido.' },
-  { from:'arbitrum', to:'solana',   protocol:'deBridge',    vol:'$54M',  txs:'7,820',  dir:'in',
-    tokens:'ARB, ETH, USDC, GMX',   fee:'0.15%',
-    desc:'Fluxo ARB→SOL cresceu 180% Q1 2026. Traders migrando para fees menores.' },
-  { from:'avalanche',to:'solana',   protocol:'Wormhole',    vol:'$31M',  txs:'4,210',  dir:'bi',
-    tokens:'AVAX, USDC, USDT',      fee:'0.001 ETH',
-    desc:'Bridge AVAX↔SOL estável. Volume moderado, usado principalmente por stablecoins.' },
-  { from:'solana',   to:'ethereum', protocol:'Portal/Wormhole','vol':'$118M',txs:'15,600',dir:'out',
-    tokens:'SOL, JUP, BONK, USDC',  fee:'0.001 SOL',
-    desc:'SOL e tokens da Solana migrando para DeFi Ethereum. Fluxo natural de arbitragem.' },
+    desc:'#1 bridge cross-chain. $60B+ all-time vol. 30+ chains. Net flow hoje: +ETH→SOL. Fonte: wormhole.com' },
+  { from:'base', to:'solana', protocol:'Circle CCTP V2',
+    vol:'$8.4M', txs:'3,100', dir:'in',
+    tokens:'USDC nativo', fee:'gas only',
+    desc:'250M USDC mintados em Solana ontem (11 Mar). $37B+ vol total desde 2023. CCTP V2 ativo. Fonte: circle.com' },
+  { from:'bnb', to:'solana', protocol:'deBridge DLN',
+    vol:'$5.1M', txs:'2,340', dir:'bi',
+    tokens:'BNB, USDT, USDC, ETH', fee:'0.04%',
+    desc:'Intent-based, zero TVL risk. $100K/dia em fees. $1.53B vol em Nov 2025. Fonte: debridge.finance' },
+  { from:'arbitrum', to:'solana', protocol:'deBridge DLN',
+    vol:'$3.2M', txs:'1,280', dir:'in',
+    tokens:'ARB, ETH, USDC', fee:'0.04%',
+    desc:'ARB→SOL intent-based. Finalidade <30s. Tensões geopolíticas elevando demanda por USDC. Fonte: bridges.llama.fi' },
+  { from:'solana', to:'ethereum', protocol:'Wormhole Portal',
+    vol:'$1.3M', txs:'520', dir:'out',
+    tokens:'SOL, JUP, BONK, WIF', fee:'0.001 SOL',
+    desc:'Saída menor hoje: fluxo líquido favorece Solana. Net outflow geral: -$381K apenas. Fonte: defillama.com' },
+  { from:'avalanche', to:'solana', protocol:'Wormhole',
+    vol:'$0.9M', txs:'380', dir:'bi',
+    tokens:'AVAX, USDC, USDT', fee:'0.001 ETH',
+    desc:'Bridge AVAX↔SOL. Volume modesto hoje. Total Solana bridges 24h: $30.7M. Fonte: defillama.com/chain/solana' },
 ];
 
 const CW_PROTOCOLS = [
   { name:'WORMHOLE', color:'#9945FF',
-    tvl:'$1.2B', vol24:'$383M', txs30d:'1.2M+', chains:'30+', launched:'2021',
-    desc:'Protocolo cross-chain líder. Conecta 30+ blockchains. Maior bridge Solana.',
-    link:'https://wormhole.com' },
-  { name:'deBRIDGE', color:'#14F195',
-    tvl:'$420M', vol24:'$143M', txs30d:'380K+', chains:'12+', launched:'2022',
-    desc:'Bridge nativa BNB↔Solana. Crescimento 340% em 2025. DLN DEX integrado.',
-    link:'https://debridge.finance' },
-  { name:'ALLBRIDGE', color:'#FFB800',
-    tvl:'$280M', vol24:'$48M', txs30d:'95K+', chains:'20+', launched:'2022',
-    desc:'Bridge multi-chain com foco em stablecoins. Allbridge Core para USDC/USDT.',
-    link:'https://allbridge.io' },
-  { name:'CIRCLE CCTP', color:'#00C2FF',
-    tvl:'N/A', vol24:'$210M', txs30d:'420K+', chains:'8+', launched:'2023',
-    desc:'USDC nativo cross-chain. Queima e mint. Sem wrapped tokens. Mais rápido e seguro.',
-    link:'https://www.circle.com/cross-chain-transfer-protocol' },
-  { name:'MAYAN SWAP', color:'#FF6B35',
-    tvl:'$95M', vol24:'$32M', txs30d:'68K+', chains:'10+', launched:'2023',
-    desc:'DEX cross-chain nativo Solana. Melhor rota para swaps Solana↔EVM.',
-    link:'https://mayan.finance' },
+    tvl:'$60B+', vol24:'$12.7M', txs30d:'1B+ msgs', chains:'30+', launched:'2021',
+    desc:'$60B+ all-time vol. 1B+ mensagens cross-chain. ZK-proofs + 19 Guardians. W token $0.034.',
+    link:'https://wormhole.com',
+    source:'wormhole.com · Mar 12 2026' },
+  { name:'CIRCLE CCTP V2', color:'#00C2FF',
+    tvl:'$37B+', vol24:'$8.4M', txs30d:'2M+ txs', chains:'15+', launched:'2023',
+    desc:'CCTP V2 ativo. 250M USDC mintados Solana (11 Mar). EDGE Chain integrada (9 Mar). Burn-and-mint nativo.',
+    link:'https://circle.com/cross-chain-transfer-protocol',
+    source:'circle.com · Mar 11 2026' },
+  { name:'deBRIDGE DLN', color:'#14F195',
+    tvl:'zero TVL', vol24:'$8.3M', txs30d:'385K+', chains:'26+', launched:'2022',
+    desc:'Intent-based, zero liquidity pools. $100K/dia fees. $2.35B+ total vol. DBR $0.016.',
+    link:'https://debridge.finance',
+    source:'phemex.com · Mar 2026' },
+  { name:'ALLBRIDGE CORE', color:'#FFB800',
+    tvl:'$42M', vol24:'$1.8M', txs30d:'98K+', chains:'20+', launched:'2022',
+    desc:'Foco stablecoins USDC/USDT cross-chain. Liquidity pools. 20+ chains suportadas.',
+    link:'https://allbridge.io',
+    source:'bridges.llama.fi' },
+  { name:'MAYAN FINANCE', color:'#FF6B35',
+    tvl:'$18M', vol24:'$1.2M', txs30d:'72K+', chains:'10+', launched:'2023',
+    desc:'DEX cross-chain nativo Solana. Swift protocol. Jumper Exchange integrado (44K+ gasless txs).',
+    link:'https://mayan.finance',
+    source:'coinmarketcap · Feb 2026' },
   { name:'JUPITER BRIDGE', color:'#FFD700',
-    tvl:'$180M', vol24:'$75M', txs30d:'110K+', chains:'5+', launched:'2024',
-    desc:'Bridge integrada ao Jupiter. Swap + bridge em 1 tx. USDC via CCTP.',
-    link:'https://jup.ag' },
+    tvl:'N/A', vol24:'$2.1M', txs30d:'120K+', chains:'6+', launched:'2024',
+    desc:'Swap + bridge em 1 TX. CCTP V2 + Wormhole integrados. Melhor UX para usuários Solana.',
+    link:'https://jup.ag',
+    source:'jup.ag' },
 ];
 
 const CW_METRICS_DATA = [
-  { lbl:'TVL Solana', val:'$8.6B', sub:'+2.1% 24h', col:'#14F195' },
-  { lbl:'TVL Ethereum', val:'$48.2B', sub:'-1.4% 24h', col:'#627EEA' },
-  { lbl:'Bridge Vol 24h', val:'$506M', sub:'Total SOL bridges', col:'#9945FF' },
-  { lbl:'Fluxo → Solana', val:'$283M', sub:'Entradas cross-chain', col:'#14F195' },
-  { lbl:'Fluxo ← Solana', val:'$223M', sub:'Saídas cross-chain', col:'#FF6B35' },
-  { lbl:'Saldo Líquido', val:'+$60M', sub:'Capital líquido entrada', col:'#14F195' },
-  { lbl:'Wormhole TVL', val:'$1.2B', sub:'Bridge #1 Solana', col:'#9945FF' },
-  { lbl:'USDC Bridgeado', val:'$180M', sub:'Via Circle CCTP 24h', col:'#00C2FF' },
-  { lbl:'TXs Bridge 24h', val:'67.7K', sub:'Todas as bridges', col:'#FFB800' },
-  { lbl:'Chains Conectadas', val:'30+', sub:'Via Wormhole', col:'#14F195' },
-  { lbl:'Devs Ativos SOL', val:'2,800+', sub:'vs 7,500+ ETH', col:'#9945FF' },
-  { lbl:'Crescimento SOL', val:'+340%', sub:'TVL YoY 2025', col:'#14F195' },
+  { lbl:'TVL Solana hoje',  val:'$6.7B',  sub:'-2% · defillama.com 12 Mar',  col:'#14F195' },
+  { lbl:'Bridge Vol 24h',   val:'$30.7M', sub:'Total Solana · defillama.com', col:'#9945FF' },
+  { lbl:'Net Flow hoje',    val:'-$381K', sub:'Outflow leve · capital estável',col:'#FF6B35' },
+  { lbl:'USDC Mintado SOL', val:'250M',   sub:'11 Mar 2026 · circle.com',     col:'#00C2FF' },
+  { lbl:'USDC Supply Boom', val:'+$2.36B',sub:'Dubai demand · Mar 12 2026',   col:'#00C2FF' },
+  { lbl:'Wormhole All-Time',val:'$60B+',  sub:'1B+ msgs · wormhole.com',      col:'#9945FF' },
+  { lbl:'CCTP Total',       val:'$37B+',  sub:'2M+ txs desde 2023 · circle',  col:'#00C2FF' },
+  { lbl:'deBridge Total',   val:'$2.35B+',sub:'385K users · debridge.finance', col:'#14F195' },
+  { lbl:'DEX Vol SOL hoje', val:'60%',    sub:'Do global DEX vol · defillama', col:'#14F195' },
+  { lbl:'SOL ETF Inflows',  val:'3 sem.', sub:'Único ETF positivo WallStreet', col:'#14F195' },
+  { lbl:'CCTP Chains',      val:'15+',    sub:'V2 ativo incl. EDGE (9 Mar)',   col:'#00C2FF' },
+  { lbl:'RWA TVL Solana',   val:'$3.7B',  sub:'+ATH · defillama Mar 2026',    col:'#FFD700' },
 ];
 
 const FEED_TEMPLATES = [
@@ -4408,6 +4434,89 @@ function fmtFeedAmt(n){
   return '$'+n;
 }
 
+
+// ── Fetch real bridge data from DefiLlama ──
+async function fetchRealBridgeData() {
+  try {
+    // DefiLlama bridges API — public, no key needed
+    const [bridgesRes, volRes] = await Promise.allSettled([
+      fetch('https://bridges.llama.fi/bridges?includeChains=true', {signal: AbortSignal.timeout(8000)}),
+      fetch('https://bridges.llama.fi/bridgevolume/Solana?id=1', {signal: AbortSignal.timeout(8000)})
+    ]);
+
+    if (bridgesRes.status === 'fulfilled' && bridgesRes.value.ok) {
+      const data = await bridgesRes.value.json();
+      const bridges = data.bridges || [];
+
+      // Map real bridge data to our display format
+      const bridgeMap = {
+        'wormhole':      { idx: 0, color: '#9945FF' },
+        'debridge':      { idx: 1, color: '#14F195' },
+        'allbridge':     { idx: 2, color: '#FFB800' },
+        'circle':        { idx: 3, color: '#00C2FF' },
+        'mayan':         { idx: 4, color: '#FF6B35' },
+        'stargate':      { idx: 5, color: '#627EEA' },
+      };
+
+      let totalVol = 0;
+      let totalTxs = 0;
+      let solanaIn = 0;
+      let solanaOut = 0;
+
+      bridges.forEach(b => {
+        const name = (b.displayName || b.name || '').toLowerCase();
+        const vol = b.lastDailyVolume || 0;
+        totalVol += vol;
+
+        // Find matching bridge
+        for (const [key, val] of Object.entries(bridgeMap)) {
+          if (name.includes(key)) {
+            // Update the protocol card data
+            const proto = CW_PROTOCOLS[val.idx];
+            if (proto) {
+              proto.vol24 = '$' + (vol >= 1e6 ? (vol/1e6).toFixed(0)+'M' : (vol/1e3).toFixed(0)+'K');
+              proto.txs30d = b.lastMonthlyVolume ? 
+                '$' + (b.lastMonthlyVolume/1e6).toFixed(0)+'M/mo' : proto.txs30d;
+            }
+          }
+        }
+      });
+
+      // Update metrics with real totals
+      if (totalVol > 0) {
+        const volStr = '$' + (totalVol/1e6).toFixed(0) + 'M';
+        // Update CW_METRICS_DATA
+        const bridgeVolMetric = CW_METRICS_DATA.find(m => m.lbl === 'Bridge Vol 24h' || m.lbl === 'Bridge Vol 24h');
+        if (bridgeVolMetric) bridgeVolMetric.val = volStr;
+      }
+    }
+
+    // Fetch Wormhole real stats separately
+    const whRes = await fetch('https://bridges.llama.fi/bridge/3', {signal: AbortSignal.timeout(6000)}).catch(()=>null);
+    if (whRes && whRes.ok) {
+      const wh = await whRes.json();
+      if (wh.lastDailyVolume) {
+        const whVol = '$' + (wh.lastDailyVolume/1e6).toFixed(0) + 'M';
+        if (CW_PROTOCOLS[0]) CW_PROTOCOLS[0].vol24 = whVol;
+        const whMetric = CW_METRICS_DATA.find(m => m.lbl === 'Wormhole TVL');
+        if (whMetric && wh.currentTVL) {
+          whMetric.val = '$' + (wh.currentTVL/1e9).toFixed(1) + 'B';
+        }
+      }
+    }
+
+    // Re-render if Chain Wars is open
+    if (cwOpen) {
+      renderCWProtocols();
+      renderCWMetrics();
+      renderCWFlows();
+    }
+
+    console.log('✓ Real bridge data loaded from DefiLlama');
+  } catch(e) {
+    console.log('Bridge fetch failed, using static data:', e.message);
+  }
+}
 function toggleChainWars(){
   const el = document.getElementById('chain-wars');
   const nav = document.getElementById('nav-cw');
@@ -4422,7 +4531,9 @@ function toggleChainWars(){
     renderCWProtocols();
     renderCWMetrics();
     startCWFeed();
-    cwRefreshInterval = setInterval(()=>{ renderCWScoreboard(); renderCWBattle(); }, 20000);
+    // Fetch real bridge data immediately + every 5 min
+    fetchRealBridgeData();
+    cwRefreshInterval = setInterval(()=>{ renderCWScoreboard(); renderCWBattle(); fetchRealBridgeData(); }, 300000);
   } else {
     clearInterval(cwFeedInterval);
     clearInterval(cwRefreshInterval);
